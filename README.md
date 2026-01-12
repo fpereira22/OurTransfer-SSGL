@@ -33,27 +33,6 @@ El proyecto utiliza las últimas tecnologías del ecosistema web:
 
 ---
 
-## ⚙️ Variables de Entorno
-
-Para ejecutar este proyecto, necesitas configurar las siguientes variables en un archivo `.env.local` en la raíz del proyecto:
-
-```env
-# --- Base de Datos PostgreSQL ---
-POSTGRES_HOST=tu_host_postgres
-POSTGRES_USER=tu_usuario
-POSTGRES_PASSWORD=tu_contraseña
-POSTGRES_DB=nombre_base_datos
-POSTGRES_PORT=5432
-
-# --- Azure Storage ---
-AZURE_STORAGE_ACCOUNT_NAME=nombre_cuenta_azure
-AZURE_STORAGE_KEY=tu_access_key
-# Opcional (por defecto: 'temporales')
-AZURE_CONTAINER_TEMP=nombre_contenedor
-```
-
----
-
 ## 🚀 Instalación y Ejecución
 
 Sigue estos pasos para levantar el entorno de desarrollo localmente:
