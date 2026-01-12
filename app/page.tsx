@@ -3,7 +3,7 @@
 import React, { useState, FormEvent, ChangeEvent, DragEvent, useRef } from 'react';
 import {
     UploadCloud, CheckCircle, Copy, LogOut, FileUp, Loader2, X,
-    Shield, Clock, Link2, Sparkles, Check, Zap, Globe, Lock
+    Shield, Clock, Link2, Sparkles, Check, Zap, Globe, Lock, Mail, Send, User, AtSign, MessageSquare
 } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/components/Toast';
@@ -85,6 +85,14 @@ export default function Home() {
     const [copied, setCopied] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
+    // Estados para envío por email (estilo WeTransfer)
+    const [emailMode, setEmailMode] = useState(false);
+    const [senderEmail, setSenderEmail] = useState('');
+    const [senderName, setSenderName] = useState('');
+    const [recipientEmail, setRecipientEmail] = useState('');
+    const [emailMessage, setEmailMessage] = useState('');
+    const [emailSent, setEmailSent] = useState(false);
+
     // --- LOGIN ---
     const handleLogin = async (e: FormEvent) => {
         e.preventDefault();
@@ -100,7 +108,7 @@ export default function Home() {
             const data = await res.json();
             if (res.ok) {
                 setUser(data as User);
-                toast.success('¡Bienvenido!', `Hola ${data.nombre}, sesión iniciada correctamente`);
+                toast.success('¡Bienvenido!', `Hola ${data.nombre} ${data.apellido}, sesión iniciada correctamente`);
             } else {
                 toast.error('Error de autenticación', data.error || 'Credenciales incorrectas');
             }
@@ -112,8 +120,23 @@ export default function Home() {
     };
 
     // --- UPLOAD ---
-    const handleUpload = async () => {
+    const handleUpload = async (sendEmail: boolean = false) => {
         if (!file) return;
+
+        // Validar campos de email si está en modo email
+        if (sendEmail && emailMode) {
+            if (!senderEmail || !recipientEmail) {
+                toast.error('Campos requeridos', 'Ingresa tu correo y el correo del destinatario');
+                return;
+            }
+            // Validación simple de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(senderEmail) || !emailRegex.test(recipientEmail)) {
+                toast.error('Email inválido', 'Verifica que los correos sean válidos');
+                return;
+            }
+        }
+
         setLoading(true);
         setStatusMsg('Preparando archivo...');
         setUploadProgress(0);
@@ -158,13 +181,43 @@ export default function Home() {
 
             const encodedUrl = encodeURIComponent(publicLink);
             const encodedName = encodeURIComponent(file.name);
-            setGeneratedLink(`${window.location.origin}/download?url=${encodedUrl}&name=${encodedName}`);
+            const downloadLink = `${window.location.origin}/download?url=${encodedUrl}&name=${encodedName}`;
+
+            setGeneratedLink(downloadLink);
+
+            // Si está en modo email y se solicitó enviar, enviar el correo
+            if (sendEmail && emailMode) {
+                setStatusMsg('Enviando notificación por correo...');
+
+                const emailRes = await fetch('/api/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        senderEmail,
+                        senderName: senderName || senderEmail.split('@')[0],
+                        recipientEmail,
+                        fileName: file.name,
+                        downloadLink,
+                        message: emailMessage || undefined
+                    })
+                });
+
+                if (!emailRes.ok) {
+                    const errorData = await emailRes.json();
+                    throw new Error(errorData.error || 'Error al enviar el correo');
+                }
+
+                setEmailSent(true);
+                toast.success('¡Archivo enviado!', `Notificación enviada a ${recipientEmail}`);
+            } else {
+                toast.success('¡Archivo subido!', 'Tu enlace está listo para compartir');
+            }
+
             setStatusMsg('');
             setFile(null);
             setUploadProgress(0);
-            toast.success('¡Archivo subido!', 'Tu enlace está listo para compartir');
         } catch (error: any) {
-            toast.error('Error', error.message || 'No se pudo subir el archivo');
+            toast.error('Error', error.message || 'No se pudo completar la operación');
             setStatusMsg('');
             setUploadProgress(0);
         } finally {
@@ -392,7 +445,7 @@ export default function Home() {
                 </div>
             </div>
 
-            <div className="w-full max-w-[420px] relative z-10 mx-4 flex flex-col items-center">
+            <div className="w-full max-w-[520px] relative z-10 mx-4 flex flex-col items-center">
                 {/* Logo & Greeting (Centered Above Card) */}
                 <div className="text-center mb-8 animate-fade-in-up">
                     <div className="relative inline-block mb-4">
@@ -408,7 +461,7 @@ export default function Home() {
 
                     <div className="flex items-center justify-center gap-3">
                         <h1 className="text-2xl font-bold text-white">
-                            Hola, <span className="text-[#0FBE5A]">{user.nombre}  </span>
+                            Hola, <span className="text-[#0FBE5A]">{user.nombre} {user.apellido}</span>
                         </h1>
                         {/* Integrated Logout Button */}
                         <button
@@ -428,55 +481,85 @@ export default function Home() {
                 {/* Main Glass Card */}
                 <div className="w-full login-glass-card p-6 sm:p-8 relative overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)]">
                     {generatedLink ? (
-                        /* Vista de Éxito Compacta */
+                        /* Vista de Éxito */
                         <div className="relative text-center animate-fade-in-up">
-                            <div className="inline-flex items-center justify-center p-3 rounded-full bg-[#0A9345]/10 text-[#0FBE5A] mb-4 ring-1 ring-[#0A9345]/30">
-                                <CheckCircle size={32} />
+                            <div className={`inline-flex items-center justify-center p-3 rounded-full mb-4 ring-1 ${emailSent
+                                ? 'bg-[#0A9345]/10 text-[#0FBE5A] ring-[#0A9345]/30'
+                                : 'bg-[#0A9345]/10 text-[#0FBE5A] ring-[#0A9345]/30'
+                                }`}>
+                                {emailSent ? <Send size={32} /> : <CheckCircle size={32} />}
                             </div>
 
                             <h2 className="text-xl font-bold text-white mb-1">
-                                ¡Listo para compartir!
+                                {emailSent ? '¡Archivo enviado!' : '¡Listo para compartir!'}
                             </h2>
-                            <p className="text-white/50 text-xs mb-6 font-medium">
-                                El enlace expira en 24 horas
-                            </p>
 
-                            {/* Link Box */}
-                            <div className="bg-[#0d1117]/60 rounded-xl p-4 border border-white/10 mb-6 text-left relative overflow-hidden group">
-                                <div className="absolute top-0 left-0 w-1 h-full bg-[#0FBE5A]" />
-                                <div className="flex items-center gap-2 mb-2">
-                                    <Link2 size={14} className="text-[#0FBE5A]" />
-                                    <span className="text-[10px] uppercase font-bold text-white/40 tracking-wider">Enlace Seguro</span>
+                            {emailSent ? (
+                                <div className="mb-6">
+                                    <p className="text-white/50 text-xs font-medium mb-3">
+                                        <span className="text-[#0FBE5A]">{recipientEmail}</span> recibirá el enlace
+                                    </p>
+                                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#0A9345]/10 border border-[#0A9345]/20">
+                                        <Mail size={12} className="text-[#0FBE5A]" />
+                                        <span className="text-[10px] text-white/60">Notificación enviada</span>
+                                    </div>
+                                </div>
+                            ) : (
+                                <p className="text-white/50 text-xs mb-6 font-medium">
+                                    El enlace expira en 24 horas
+                                </p>
+                            )}
+
+                            {/* Link Box - Más grande y visible */}
+                            <div className="bg-[#1a1f26] rounded-2xl p-5 border-2 border-[#0A9345]/40 mb-6 text-left relative overflow-hidden">
+                                <div className="absolute top-0 left-0 w-1.5 h-full bg-gradient-to-b from-[#0FBE5A] to-[#0A9345]" />
+                                <div className="flex items-center gap-2 mb-3 ml-2">
+                                    <Link2 size={18} className="text-[#0FBE5A]" />
+                                    <span className="text-sm uppercase font-bold text-[#0FBE5A] tracking-wider" style={{ textShadow: '1px 1px 2px #000' }}>
+                                        {emailSent ? 'También puedes copiar el enlace' : 'Enlace Seguro'}
+                                    </span>
                                 </div>
 
-                                <div className="flex gap-2">
+                                <div className="flex gap-3 items-center ml-2">
                                     <input
                                         readOnly
                                         value={generatedLink}
-                                        className="flex-1 bg-transparent text-gray-300 text-xs font-mono outline-none truncate"
+                                        style={{ color: '#ffffff', backgroundColor: '#0d1117' }}
+                                        className="flex-1 h-12 rounded-xl px-4 text-sm font-mono outline-none border-2 border-white/10 focus:border-[#0FBE5A]"
                                         onClick={(e) => e.currentTarget.select()}
                                     />
                                     <button
                                         onClick={copyToClipboard}
-                                        className={`p-1.5 rounded-lg transition-colors ${copied ? 'text-[#0FBE5A] bg-[#0FBE5A]/10' : 'text-white/50 hover:text-white hover:bg-white/10'}`}
-                                        title="Copiar"
+                                        className={`h-12 px-5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${copied
+                                                ? 'bg-[#0FBE5A] text-white'
+                                                : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
+                                            }`}
                                     >
-                                        {copied ? <Check size={16} /> : <Copy size={16} />}
+                                        {copied ? <Check size={20} /> : <Copy size={20} />}
+                                        {copied ? 'Copiado' : 'Copiar'}
                                     </button>
                                 </div>
                             </div>
 
                             <button
-                                onClick={() => { setGeneratedLink(''); setFile(null); }}
-                                className="w-full py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white/80 hover:text-white transition-all text-sm font-medium flex items-center justify-center gap-2 border border-white/5 hover:border-white/10"
+                                onClick={() => {
+                                    setGeneratedLink('');
+                                    setFile(null);
+                                    setEmailSent(false);
+                                    setSenderEmail('');
+                                    setSenderName('');
+                                    setRecipientEmail('');
+                                    setEmailMessage('');
+                                }}
+                                className="glass-button w-full h-14 flex items-center justify-center gap-3 text-base font-bold transition-all"
                             >
-                                <UploadCloud size={16} />
-                                Subir otro archivo
+                                <UploadCloud size={20} />
+                                {emailSent ? 'Enviar otro archivo' : 'Subir otro archivo'}
                             </button>
                         </div>
                     ) : (
-                        /* Vista de Upload Compacta */
-                        <div className="relative space-y-6">
+                        /* Vista de Upload con opción de Email */
+                        <div className="relative space-y-5">
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -484,6 +567,7 @@ export default function Home() {
                                 onChange={handleFileChange}
                             />
 
+                            {/* Dropzone */}
                             <div
                                 onClick={() => fileInputRef.current?.click()}
                                 onDragEnter={handleDragEnter}
@@ -491,8 +575,8 @@ export default function Home() {
                                 onDragOver={handleDragOver}
                                 onDrop={handleDrop}
                                 className={`
-                                    relative rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 border border-dashed
-                                    group min-h-[220px]
+                                    relative rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 border border-dashed
+                                    group min-h-[160px]
                                     ${isDragging
                                         ? 'border-[#0FBE5A] bg-[#0A9345]/10 scale-[1.02]'
                                         : file
@@ -502,13 +586,13 @@ export default function Home() {
                                 `}
                             >
                                 <div className={`
-                                    w-14 h-14 rounded-full flex items-center justify-center mb-4 transition-all duration-500
+                                    w-12 h-12 rounded-full flex items-center justify-center mb-3 transition-all duration-500
                                     ${file || isDragging
                                         ? 'bg-[#0A9345] text-white shadow-lg shadow-[#0A9345]/30'
                                         : 'bg-white/5 text-white/40 group-hover:bg-white/10 group-hover:text-white'
                                     }
                                 `}>
-                                    <FileUp size={24} />
+                                    <FileUp size={22} />
                                 </div>
 
                                 {file ? (
@@ -516,7 +600,7 @@ export default function Home() {
                                         <p className="text-white font-medium text-sm mb-1 truncate px-2">
                                             {file.name}
                                         </p>
-                                        <p className="text-[#0FBE5A] text-xs mb-3">
+                                        <p className="text-[#0FBE5A] text-xs mb-2">
                                             {formatFileSize(file.size)}
                                         </p>
                                         <button
@@ -532,7 +616,7 @@ export default function Home() {
                                     </div>
                                 ) : (
                                     <div>
-                                        <p className="text-white font-medium text-base mb-1">
+                                        <p className="text-white font-medium text-sm mb-1">
                                             Sube tu archivo
                                         </p>
                                         <p className="text-white/40 text-xs">
@@ -541,6 +625,116 @@ export default function Home() {
                                     </div>
                                 )}
                             </div>
+
+                            {/* Toggle Email Mode - Botón GRIS */}
+                            <div className="pt-2">
+                                <button
+                                    onClick={() => setEmailMode(!emailMode)}
+                                    className={`
+                                        w-full h-14 flex items-center justify-center gap-3 text-base font-bold
+                                        rounded-xl transition-all duration-300
+                                        bg-white/10 hover:bg-white/20 text-white/80 hover:text-white
+                                        border border-white/20 hover:border-white/30
+                                        ${emailMode ? 'bg-white/20 ring-2 ring-[#0FBE5A]/50 text-white' : ''}
+                                    `}
+                                >
+                                    <Mail size={20} />
+                                    {emailMode ? '✓ Notificar por correo' : '📧 Notificar por correo'}
+                                </button>
+                            </div>
+
+                            {/* Email Fields - Panel Grande y Limpio */}
+                            {emailMode && (
+                                <div className="animate-fade-in-up space-y-6 pt-4">
+                                    {/* Header */}
+                                    <div className="text-center">
+                                        <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-[#0A9345]/20 border border-[#0A9345]/30">
+                                            <Send size={18} className="text-[#0FBE5A]" />
+                                            <span className="text-base font-semibold text-white">Datos del envío</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Campos del formulario */}
+                                    <div className="space-y-5">
+                                        {/* Tu nombre */}
+                                        <div>
+                                            <label className="block text-sm font-semibold text-[#0FBE5A] mb-3" style={{ textShadow: '1px 1px 2px #000' }}>
+                                                Tu nombre
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="Escribe tu nombre aquí..."
+                                                value={senderName}
+                                                onChange={(e) => setSenderName(e.target.value)}
+                                                style={{ color: '#ffffff', backgroundColor: '#1a1f26' }}
+                                                className="w-full h-14 border-2 border-[#0A9345]/40 rounded-xl px-5 text-base placeholder:text-gray-500 focus:outline-none focus:border-[#0FBE5A] focus:ring-2 focus:ring-[#0A9345]/30 transition-all"
+                                            />
+                                        </div>
+
+                                        {/* Tu correo */}
+                                        <div>
+                                            <label className="block text-sm font-semibold text-[#0FBE5A] mb-3" style={{ textShadow: '1px 1px 2px #000' }}>
+                                                Tu correo electrónico <span className="text-red-400">*</span>
+                                            </label>
+                                            <input
+                                                type="email"
+                                                placeholder="tucorreo@ejemplo.com"
+                                                value={senderEmail}
+                                                onChange={(e) => setSenderEmail(e.target.value)}
+                                                style={{ color: '#ffffff', backgroundColor: '#1a1f26' }}
+                                                className="w-full h-14 border-2 border-[#0A9345]/40 rounded-xl px-5 text-base placeholder:text-gray-500 focus:outline-none focus:border-[#0FBE5A] focus:ring-2 focus:ring-[#0A9345]/30 transition-all"
+                                                required
+                                            />
+                                        </div>
+
+                                        {/* Separador */}
+                                        <div className="flex items-center gap-4 py-2">
+                                            <div className="flex-1 h-0.5 bg-gradient-to-r from-transparent via-[#0FBE5A]/50 to-transparent" />
+                                            <span className="text-sm font-bold text-[#0FBE5A] uppercase tracking-wider px-2" style={{ textShadow: '1px 1px 2px #000' }}>Destinatario</span>
+                                            <div className="flex-1 h-0.5 bg-gradient-to-r from-transparent via-[#0FBE5A]/50 to-transparent" />
+                                        </div>
+
+                                        {/* Correo destinatario */}
+                                        <div>
+                                            <label className="block text-sm font-semibold text-[#0FBE5A] mb-3" style={{ textShadow: '1px 1px 2px #000' }}>
+                                                Correo del destinatario <span className="text-red-400">*</span>
+                                            </label>
+                                            <input
+                                                type="email"
+                                                placeholder="destinatario@ejemplo.com"
+                                                value={recipientEmail}
+                                                onChange={(e) => setRecipientEmail(e.target.value)}
+                                                style={{ color: '#ffffff', backgroundColor: '#1a1f26' }}
+                                                className="w-full h-14 border-2 border-[#0A9345]/40 rounded-xl px-5 text-base placeholder:text-gray-500 focus:outline-none focus:border-[#0FBE5A] focus:ring-2 focus:ring-[#0A9345]/30 transition-all"
+                                                required
+                                            />
+                                        </div>
+
+                                        {/* Mensaje */}
+                                        <div>
+                                            <label className="block text-sm font-semibold text-[#0FBE5A] mb-3" style={{ textShadow: '1px 1px 2px #000' }}>
+                                                Mensaje (opcional)
+                                            </label>
+                                            <textarea
+                                                placeholder="Escribe un mensaje para el destinatario..."
+                                                value={emailMessage}
+                                                onChange={(e) => setEmailMessage(e.target.value)}
+                                                rows={4}
+                                                style={{ color: '#ffffff', backgroundColor: '#1a1f26' }}
+                                                className="w-full border-2 border-[#0A9345]/40 rounded-xl p-5 text-base placeholder:text-gray-500 focus:outline-none focus:border-[#0FBE5A] focus:ring-2 focus:ring-[#0A9345]/30 transition-all resize-none"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Info footer */}
+                                    <div className="flex items-center justify-center gap-3 py-3 bg-[#0A9345]/10 rounded-xl border border-[#0A9345]/20">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-[#0FBE5A] animate-pulse" />
+                                        <p className="text-sm text-white/70">
+                                            El destinatario recibirá un correo con el enlace de descarga
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Status Bar */}
                             {statusMsg && (
@@ -561,20 +755,53 @@ export default function Home() {
                                 </div>
                             )}
 
-                            <button
-                                onClick={handleUpload}
-                                disabled={!file || loading}
-                                className="glass-button w-full h-12 flex items-center justify-center gap-2 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 active:scale-[0.98] transition-all"
-                            >
-                                {loading ? (
-                                    <Loader2 className="animate-spin" size={18} />
-                                ) : (
+                            {/* Botones de Acción */}
+                            <div className="space-y-2">
+                                {emailMode ? (
                                     <>
-                                        Generar Link
-                                        <Sparkles size={16} />
+                                        {/* Botón principal: Enviar por correo */}
+                                        <button
+                                            onClick={() => handleUpload(true)}
+                                            disabled={!file || loading || !senderEmail || !recipientEmail}
+                                            className="glass-button w-full h-12 flex items-center justify-center gap-2 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 active:scale-[0.98] transition-all"
+                                        >
+                                            {loading ? (
+                                                <Loader2 className="animate-spin" size={18} />
+                                            ) : (
+                                                <>
+                                                    <Send size={16} />
+                                                    Enviar por Correo
+                                                </>
+                                            )}
+                                        </button>
+                                        {/* Botón secundario: Solo generar link */}
+                                        <button
+                                            onClick={() => handleUpload(false)}
+                                            disabled={!file || loading}
+                                            className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white/80 transition-all text-xs font-medium flex items-center justify-center gap-2 border border-white/5 hover:border-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <Link2 size={14} />
+                                            Solo generar link
+                                        </button>
                                     </>
+                                ) : (
+                                    /* Botón único: Generar Link */
+                                    <button
+                                        onClick={() => handleUpload(false)}
+                                        disabled={!file || loading}
+                                        className="glass-button w-full h-12 flex items-center justify-center gap-2 text-sm font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 active:scale-[0.98] transition-all"
+                                    >
+                                        {loading ? (
+                                            <Loader2 className="animate-spin" size={18} />
+                                        ) : (
+                                            <>
+                                                Generar Link
+                                                <Sparkles size={16} />
+                                            </>
+                                        )}
+                                    </button>
                                 )}
-                            </button>
+                            </div>
                         </div>
                     )}
                 </div>

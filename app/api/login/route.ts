@@ -22,7 +22,7 @@ export async function POST(request: Request) {
 
         try {
             // Consulta SQL adaptada a Postgres ($1 es el parámetro)
-            const queryText = 'SELECT username, password, nombre, apellido_materno FROM personas WHERE username = $1';
+            const queryText = 'SELECT username, password, nombre, apellido_paterno FROM personas WHERE username = $1';
             const result = await client.query(queryText, [username]);
 
             if (result.rows.length === 0) {
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
             return Response.json({
                 username: user.username,
                 nombre: user.nombre,
-                apellido: user.apellido_materno
+                apellido: user.apellido_paterno
             });
 
         } finally {
