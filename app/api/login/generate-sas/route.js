@@ -33,7 +33,8 @@ export async function POST(request) {
             expiresOn: new Date(new Date().valueOf() + 24 * 60 * 60 * 1000),
         }, sharedKeyCredential).toString();
 
-        const baseUrl = `https://${accountName}.blob.core.windows.net/${containerName}/${blobName}`;
+        // Codificar el nombre del blob en la URL para manejar espacios y caracteres especiales
+        const baseUrl = `https://${accountName}.blob.core.windows.net/${containerName}/${encodeURIComponent(blobName)}`;
 
         return Response.json({
             uploadUrl: `${baseUrl}?${uploadSas}`,

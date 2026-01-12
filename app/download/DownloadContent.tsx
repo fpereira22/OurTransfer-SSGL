@@ -77,8 +77,10 @@ export default function DownloadContent() {
     const fileUrl = searchParams.get('url') || '';
     const fileName = searchParams.get('name') || 'archivo';
 
-    const decodedUrl = decodeURIComponent(fileUrl);
-    const decodedName = decodeURIComponent(fileName);
+    // No decodificar de nuevo, searchParams.get() ya nos da el valor original
+    // y si decodificamos el SAS token (%2B -> +) se rompe la firma
+    const decodedUrl = fileUrl;
+    const decodedName = fileName;
 
     const fileType = getFileType(decodedName);
     const FileIcon = getFileIcon(fileType);
