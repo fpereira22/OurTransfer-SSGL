@@ -531,8 +531,8 @@ export default function Home() {
                                     <button
                                         onClick={copyToClipboard}
                                         className={`h-12 px-5 rounded-xl font-bold text-sm transition-all flex items-center gap-2 ${copied
-                                                ? 'bg-[#0FBE5A] text-white'
-                                                : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
+                                            ? 'bg-[#0FBE5A] text-white'
+                                            : 'bg-white/10 text-white hover:bg-white/20 border border-white/20'
                                             }`}
                                     >
                                         {copied ? <Check size={20} /> : <Copy size={20} />}

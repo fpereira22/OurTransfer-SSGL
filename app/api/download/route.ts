@@ -10,15 +10,13 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const decodedUrl = decodeURIComponent(url);
-
         // Verificar que sea una URL válida de Azure
-        if (!decodedUrl.includes('blob.core.windows.net')) {
+        if (!url.includes('blob.core.windows.net')) {
             return NextResponse.json({ error: 'URL no válida' }, { status: 400 });
         }
 
         // Fetch del archivo desde Azure
-        const response = await fetch(decodedUrl);
+        const response = await fetch(url);
 
         if (!response.ok) {
             return NextResponse.json(

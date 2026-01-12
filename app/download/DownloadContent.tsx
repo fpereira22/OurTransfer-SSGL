@@ -21,6 +21,19 @@ const getFileType = (filename: string): 'image' | 'video' | 'audio' | 'document'
     return 'other';
 };
 
+// Utility to clean filename for display
+const cleanFileName = (name: string) => {
+    // Remove extension for the title
+    const nameWithoutExt = name.substring(0, name.lastIndexOf('.')) || name;
+    const ext = name.split('.').pop();
+    // Replace underscores/hyphens with spaces and capitalize
+    const cleanName = nameWithoutExt
+        .replace(/[_-]/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+
+    return { name: cleanName, ext: ext ? `.${ext}` : '' };
+};
+
 const getFileIcon = (type: string) => {
     switch (type) {
         case 'image': return FileImage;
@@ -31,40 +44,7 @@ const getFileIcon = (type: string) => {
     }
 };
 
-// Partículas
-const Particles = () => {
-    const particles = Array.from({ length: 20 }, (_, i) => ({
-        id: i,
-        left: `${Math.random() * 100}%`,
-        top: `${Math.random() * 100}%`,
-        delay: `${Math.random() * 5}s`,
-        duration: 4 + Math.random() * 4,
-        size: 3 + Math.random() * 5,
-        opacity: 0.1 + Math.random() * 0.2,
-    }));
 
-    return (
-        <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
-            <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-[#0A9345]/20 rounded-full blur-[120px] animate-pulse" />
-            <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-[#0FBE5A]/15 rounded-full blur-[120px] animate-pulse" style={{ animationDelay: '1s' }} />
-            {particles.map(p => (
-                <div
-                    key={p.id}
-                    className="absolute rounded-full bg-[#0A9345]"
-                    style={{
-                        left: p.left,
-                        top: p.top,
-                        width: p.size,
-                        height: p.size,
-                        opacity: p.opacity,
-                        animation: `float ${p.duration}s ease-in-out infinite`,
-                        animationDelay: p.delay,
-                    }}
-                />
-            ))}
-        </div>
-    );
-};
 
 export default function DownloadContent() {
     const searchParams = useSearchParams();
@@ -81,6 +61,9 @@ export default function DownloadContent() {
     // y si decodificamos el SAS token (%2B -> +) se rompe la firma
     const decodedUrl = fileUrl;
     const decodedName = fileName;
+
+    // Limpiar nombre para mostrar
+    const { name: displayName, ext: displayExt } = cleanFileName(decodedName);
 
     const fileType = getFileType(decodedName);
     const FileIcon = getFileIcon(fileType);
@@ -128,7 +111,41 @@ export default function DownloadContent() {
     if (isLoading) {
         return (
             <main className="min-h-screen flex items-center justify-center p-4">
-                <Particles />
+                {/* Animated Highway Background */}
+                <div className="highway-background">
+                    <div className="highway-sky" />
+                    <div className="stars" />
+                    <div className="sun-glow" />
+                    <div className="clouds">
+                        <div className="cloud cloud-1" />
+                        <div className="cloud cloud-2" />
+                        <div className="cloud cloud-3" />
+                        <div className="cloud cloud-4" />
+                        <div className="cloud cloud-5" />
+                        <div className="cloud cloud-6" />
+                    </div>
+                    <div className="highway-glow" />
+                    <div className="mountains">
+                        <div className="mountain mountain-3" />
+                        <div className="mountain mountain-2" />
+                        <div className="mountain" />
+                    </div>
+                    <div className="trees">
+                        <div className="tree tree-1" />
+                        <div className="tree tree-2" />
+                        <div className="tree tree-3" />
+                        <div className="tree tree-4" />
+                        <div className="tree tree-5" />
+                        <div className="tree tree-6" />
+                    </div>
+                    <div className="road-container">
+                        <div className="road">
+                            <div className="road-lines" />
+                            <div className="road-lines road-line-left" />
+                            <div className="road-lines road-line-right" />
+                        </div>
+                    </div>
+                </div>
                 <div className="text-center relative z-10">
                     <div className="w-16 h-16 border-4 border-[#0A9345] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-gray-400">Cargando archivo...</p>
@@ -140,9 +157,43 @@ export default function DownloadContent() {
     if (!isValid) {
         return (
             <main className="min-h-screen flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
-                <Particles />
+                {/* Animated Highway Background */}
+                <div className="highway-background">
+                    <div className="highway-sky" />
+                    <div className="stars" />
+                    <div className="sun-glow" />
+                    <div className="clouds">
+                        <div className="cloud cloud-1" />
+                        <div className="cloud cloud-2" />
+                        <div className="cloud cloud-3" />
+                        <div className="cloud cloud-4" />
+                        <div className="cloud cloud-5" />
+                        <div className="cloud cloud-6" />
+                    </div>
+                    <div className="highway-glow" />
+                    <div className="mountains">
+                        <div className="mountain mountain-3" />
+                        <div className="mountain mountain-2" />
+                        <div className="mountain" />
+                    </div>
+                    <div className="trees">
+                        <div className="tree tree-1" />
+                        <div className="tree tree-2" />
+                        <div className="tree tree-3" />
+                        <div className="tree tree-4" />
+                        <div className="tree tree-5" />
+                        <div className="tree tree-6" />
+                    </div>
+                    <div className="road-container">
+                        <div className="road">
+                            <div className="road-lines" />
+                            <div className="road-lines road-line-left" />
+                            <div className="road-lines road-line-right" />
+                        </div>
+                    </div>
+                </div>
 
-                <div className="w-full max-w-md relative z-10">
+                <div className="w-full max-w-[440px] relative z-10 px-4">
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-red-500/30 to-orange-500/30 rounded-3xl blur-xl opacity-50" />
 
@@ -170,14 +221,48 @@ export default function DownloadContent() {
 
     return (
         <main className="min-h-screen p-4 sm:p-6 lg:p-8 relative flex items-center justify-center overflow-hidden">
-            <Particles />
+            {/* Animated Highway Background */}
+            <div className="highway-background">
+                <div className="highway-sky" />
+                <div className="stars" />
+                <div className="sun-glow" />
+                <div className="clouds">
+                    <div className="cloud cloud-1" />
+                    <div className="cloud cloud-2" />
+                    <div className="cloud cloud-3" />
+                    <div className="cloud cloud-4" />
+                    <div className="cloud cloud-5" />
+                    <div className="cloud cloud-6" />
+                </div>
+                <div className="highway-glow" />
+                <div className="mountains">
+                    <div className="mountain mountain-3" />
+                    <div className="mountain mountain-2" />
+                    <div className="mountain" />
+                </div>
+                <div className="trees">
+                    <div className="tree tree-1" />
+                    <div className="tree tree-2" />
+                    <div className="tree tree-3" />
+                    <div className="tree tree-4" />
+                    <div className="tree tree-5" />
+                    <div className="tree tree-6" />
+                </div>
+                <div className="road-container">
+                    <div className="road">
+                        <div className="road-lines" />
+                        <div className="road-lines road-line-left" />
+                        <div className="road-lines road-line-right" />
+                    </div>
+                </div>
+            </div>
 
-            <div className="w-full max-w-2xl relative z-10">
+            <div className="w-full max-w-[440px] relative z-10 px-4">
                 {/* Logo Header */}
-                <div className="text-center mb-6 sm:mb-8">
-                    <div className="inline-block relative">
-                        <div className="absolute inset-0 bg-[#0A9345]/30 blur-2xl rounded-full" />
-                        <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto relative">
+                <div className="text-center mb-10">
+                    <div className="inline-block relative group mb-2">
+                        <div className="absolute inset-0 bg-[#0A9345]/50 blur-3xl rounded-full opacity-60 group-hover:opacity-80 transition-opacity" />
+                        <div className="w-20 h-20 mx-auto relative drop-shadow-[0_0_15px_rgba(10,147,69,0.5)] transform hover:scale-105 transition-transform duration-500">
                             <Image
                                 src="/logo.png"
                                 alt="SSGL"
@@ -186,16 +271,19 @@ export default function DownloadContent() {
                             />
                         </div>
                     </div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-white mt-4">
-                        SSGL <span className="bg-gradient-to-r from-[#0FBE5A] to-[#0A9345] bg-clip-text text-transparent">Transfer</span>
-                    </h1>
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+                            SSGL <span className="text-[#0FBE5A]">OurTransfer</span>
+                        </h1>
+                        <p className="text-white/60 text-sm mt-1">Sistema de transferencia segura</p>
+                    </div>
                 </div>
 
                 {/* Card Principal */}
                 <div className="relative group">
                     <div className="absolute -inset-1 bg-gradient-to-r from-[#0A9345]/40 via-[#0FBE5A]/20 to-[#0A9345]/40 rounded-3xl blur-xl opacity-40 group-hover:opacity-60 transition-opacity" />
 
-                    <div className="relative backdrop-blur-2xl bg-gradient-to-b from-white/10 to-white/5 rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+                    <div className="login-glass-card p-0 overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6)]">
                         {/* Preview Section */}
                         {isImage && (
                             <div className="relative bg-black/40 p-4 sm:p-6 flex items-center justify-center min-h-[200px] sm:min-h-[300px] max-h-[500px]">
@@ -243,25 +331,26 @@ export default function DownloadContent() {
                         )}
 
                         {/* Info Section */}
-                        <div className="p-6 sm:p-8">
+                        <div className="p-8 space-y-8">
                             {/* File Info */}
-                            <div className="text-center mb-6">
-                                <h2 className="text-lg sm:text-xl font-bold text-white mb-2 break-all px-4">
-                                    {decodedName}
+                            <div className="text-center">
+                                <h2 className="text-2xl font-bold text-white mb-2 leading-tight">
+                                    {displayName}<span className="text-white/40">{displayExt}</span>
                                 </h2>
-                                <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
-                                    <CheckCircle2 size={16} className="text-[#0FBE5A]" />
-                                    <span>Archivo disponible para descarga</span>
+                                <div className="inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-[#0FBE5A] animate-pulse" />
+                                    <span className="text-xs font-medium text-white/70">Listo para descargar</span>
                                 </div>
                             </div>
 
-                            {/* Download Button */}
-                            <button
-                                onClick={handleDownload}
-                                disabled={downloading}
-                                className="w-full relative overflow-hidden bg-gradient-to-r from-[#0A9345] to-[#0FBE5A] text-white font-bold py-4 sm:py-5 rounded-2xl transition-all duration-300 disabled:opacity-60 enabled:hover:shadow-lg enabled:hover:shadow-[#0A9345]/40 enabled:hover:scale-[1.02] group mb-4"
-                            >
-                                <span className="relative z-10 flex items-center justify-center gap-3 text-base sm:text-lg">
+                            {/* Actions Group */}
+                            <div className="space-y-4">
+                                {/* Download Button */}
+                                <button
+                                    onClick={handleDownload}
+                                    disabled={downloading}
+                                    className="glass-button w-full h-14 flex items-center justify-center gap-3 text-base font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 active:scale-[0.98] transition-all shadow-xl shadow-[#0A9345]/20 group"
+                                >
                                     {downloading ? (
                                         <>
                                             <Loader2 size={24} className="animate-spin" />
@@ -269,36 +358,38 @@ export default function DownloadContent() {
                                         </>
                                     ) : (
                                         <>
-                                            <Download size={24} />
-                                            Descargar Archivo
-                                            <Sparkles size={18} className="opacity-70" />
+                                            <div className="bg-white/20 p-1.5 rounded-lg group-hover:scale-110 transition-transform">
+                                                <Download size={20} className="text-[#063d1a]" />
+                                            </div>
+                                            Descargar
                                         </>
                                     )}
-                                </span>
-                                <div className="absolute inset-0 bg-gradient-to-r from-[#0FBE5A] to-[#0A9345] opacity-0 group-hover:opacity-100 transition-opacity" />
-                            </button>
+                                </button>
 
-                            {/* Open in new tab */}
-                            <a
-                                href={decodedUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full flex items-center justify-center gap-2 text-gray-400 hover:text-white transition-colors py-3 rounded-xl hover:bg-white/5"
-                            >
-                                <ExternalLink size={16} />
-                                Abrir en nueva pestaña
-                            </a>
+                                {/* Open in new tab - High Visibility Modern Button */}
+                                <a
+                                    href={decodedUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{ textDecoration: 'none' }}
+                                    className="w-full h-14 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold transition-all flex items-center justify-center gap-2 border border-white/20 hover:border-white/30 group backdrop-blur-md shadow-lg"
+                                >
+                                    <ExternalLink size={20} className="text-[#0FBE5A] group-hover:scale-110 transition-transform" />
+                                    Vista previa
+                                </a>
+                            </div>
 
                             {/* Security Info */}
-                            <div className="mt-6 pt-6 border-t border-white/10">
-                                <div className="flex items-center justify-center gap-6 text-xs text-gray-500">
-                                    <span className="flex items-center gap-1.5">
-                                        <Shield size={14} className="text-[#0A9345]" />
-                                        Transferencia segura
+                            <div className="pt-6 border-t border-white/10">
+                                <div className="flex items-center justify-center gap-6 text-[10px] font-medium text-white/40 uppercase tracking-widest">
+                                    <span className="flex items-center gap-2 hover:text-[#0FBE5A] transition-colors">
+                                        <Shield size={12} />
+                                        Seguro
                                     </span>
-                                    <span className="flex items-center gap-1.5">
-                                        <Clock size={14} className="text-[#0A9345]" />
-                                        Auto-elimina en 24h
+                                    <span className="w-1 h-1 rounded-full bg-white/20" />
+                                    <span className="flex items-center gap-2 hover:text-[#0FBE5A] transition-colors">
+                                        <Clock size={12} />
+                                        24 Horas
                                     </span>
                                 </div>
                             </div>
