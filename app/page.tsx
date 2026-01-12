@@ -3,7 +3,7 @@
 import React, { useState, FormEvent, ChangeEvent, DragEvent, useRef } from 'react';
 import {
     UploadCloud, CheckCircle, Copy, LogOut, FileUp, Loader2, X,
-    Shield, Clock, Link2, Sparkles, Check, Zap, Globe, Lock, Mail, Send, User, AtSign, MessageSquare
+    Shield, Clock, Link2, Sparkles, Check, Zap, Globe, Lock, Mail, Send, User, AtSign, MessageSquare, AlertTriangle
 } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/components/Toast';
@@ -92,6 +92,7 @@ export default function Home() {
     const [recipientEmail, setRecipientEmail] = useState('');
     const [emailMessage, setEmailMessage] = useState('');
     const [emailSent, setEmailSent] = useState(false);
+    const [emailErrors, setEmailErrors] = useState({ sender: '', recipient: '' });
 
     // --- LOGIN ---
     const handleLogin = async (e: FormEvent) => {
@@ -125,16 +126,34 @@ export default function Home() {
 
         // Validar campos de email si está en modo email
         if (sendEmail && emailMode) {
-            if (!senderEmail || !recipientEmail) {
-                toast.error('Campos requeridos', 'Ingresa tu correo y el correo del destinatario');
-                return;
-            }
-            // Validación simple de email
+            let hasError = false;
+            const newErrors = { sender: '', recipient: '' };
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(senderEmail) || !emailRegex.test(recipientEmail)) {
-                toast.error('Email inválido', 'Verifica que los correos sean válidos');
+
+            if (!senderEmail) {
+                newErrors.sender = 'Ingresa tu correo';
+                hasError = true;
+            } else if (!emailRegex.test(senderEmail)) {
+                newErrors.sender = 'Correo inválido';
+                hasError = true;
+            }
+
+            if (!recipientEmail) {
+                newErrors.recipient = 'Ingresa el correo del destinatario';
+                hasError = true;
+            } else if (!emailRegex.test(recipientEmail)) {
+                newErrors.recipient = 'Correo inválido';
+                hasError = true;
+            }
+
+            setEmailErrors(newErrors);
+
+            if (hasError) {
+                toast.error('Datos incorrectos', 'Por favor revisa los campos en rojo');
                 return;
             }
+        } else {
+            setEmailErrors({ sender: '', recipient: '' });
         }
 
         setLoading(true);
@@ -680,11 +699,22 @@ export default function Home() {
                                                 type="email"
                                                 placeholder="tucorreo@ejemplo.com"
                                                 value={senderEmail}
-                                                onChange={(e) => setSenderEmail(e.target.value)}
+                                                onChange={(e) => {
+                                                    setSenderEmail(e.target.value);
+                                                    if (emailErrors.sender) setEmailErrors({ ...emailErrors, sender: '' });
+                                                }}
                                                 style={{ color: '#ffffff', backgroundColor: '#1a1f26' }}
-                                                className="w-full h-14 border-2 border-[#0A9345]/40 rounded-xl px-5 text-base placeholder:text-gray-500 focus:outline-none focus:border-[#0FBE5A] focus:ring-2 focus:ring-[#0A9345]/30 transition-all"
+                                                className={`w-full h-14 border-2 rounded-xl px-5 text-base placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all ${emailErrors.sender
+                                                    ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/30'
+                                                    : 'border-[#0A9345]/40 focus:border-[#0FBE5A] focus:ring-[#0A9345]/30'
+                                                    }`}
                                                 required
                                             />
+                                            {emailErrors.sender && (
+                                                <p className="text-red-400 text-xs mt-1 ml-1 flex items-center gap-1">
+                                                    <AlertTriangle size={10} /> {emailErrors.sender}
+                                                </p>
+                                            )}
                                         </div>
 
                                         {/* Separador */}
@@ -703,11 +733,22 @@ export default function Home() {
                                                 type="email"
                                                 placeholder="destinatario@ejemplo.com"
                                                 value={recipientEmail}
-                                                onChange={(e) => setRecipientEmail(e.target.value)}
+                                                onChange={(e) => {
+                                                    setRecipientEmail(e.target.value);
+                                                    if (emailErrors.recipient) setEmailErrors({ ...emailErrors, recipient: '' });
+                                                }}
                                                 style={{ color: '#ffffff', backgroundColor: '#1a1f26' }}
-                                                className="w-full h-14 border-2 border-[#0A9345]/40 rounded-xl px-5 text-base placeholder:text-gray-500 focus:outline-none focus:border-[#0FBE5A] focus:ring-2 focus:ring-[#0A9345]/30 transition-all"
+                                                className={`w-full h-14 border-2 rounded-xl px-5 text-base placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all ${emailErrors.recipient
+                                                    ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/30'
+                                                    : 'border-[#0A9345]/40 focus:border-[#0FBE5A] focus:ring-[#0A9345]/30'
+                                                    }`}
                                                 required
                                             />
+                                            {emailErrors.recipient && (
+                                                <p className="text-red-400 text-xs mt-1 ml-1 flex items-center gap-1">
+                                                    <AlertTriangle size={10} /> {emailErrors.recipient}
+                                                </p>
+                                            )}
                                         </div>
 
                                         {/* Mensaje */}
