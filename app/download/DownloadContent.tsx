@@ -81,30 +81,21 @@ export default function DownloadContent() {
     const handleDownload = async () => {
         setDownloading(true);
         try {
-            // Usar proxy API para evitar CORS
-            const proxyUrl = `/api/download?url=${encodeURIComponent(decodedUrl)}&filename=${encodeURIComponent(decodedName)}`;
-            const response = await fetch(proxyUrl);
-
-            if (!response.ok) {
-                const error = await response.json().catch(() => ({ error: 'Error desconocido' }));
-                throw new Error(error.error || 'Archivo no disponible');
-            }
-
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
+            // Para archivos grandes (GBs), no podemos usar un proxy de servidor ni blobs en memoria.
+            // Usamos descarga directa. El SAS generado ahora incluye Content-Disposition para el nombre correcto.
             const a = document.createElement('a');
-            a.href = url;
+            a.href = decodedUrl;
             a.download = decodedName;
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
 
-            toast.success('¡Descarga iniciada!', decodedName);
+            toast.success('¡Descarga iniciada!', 'El navegador gestionará el archivo');
         } catch (error: any) {
-            toast.error('Error de descarga', error.message || 'El archivo puede haber expirado');
+            toast.error('Error de descarga', 'No se pudo iniciar la descarga directa');
         } finally {
-            setDownloading(false);
+            // Un pequeño delay para que el usuario vea que algo pasó
+            setTimeout(() => setDownloading(false), 2000);
         }
     };
 

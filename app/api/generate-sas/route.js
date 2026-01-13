@@ -36,6 +36,7 @@ export async function POST(request) {
             permissions: BlobSASPermissions.parse("r"), // Read
             startsOn: new Date(new Date().valueOf() - 5 * 60 * 1000),
             expiresOn: new Date(new Date().valueOf() + 24 * 60 * 60 * 1000),
+            contentDisposition: `attachment; filename="${filename}"`
         }, sharedKeyCredential).toString();
 
         const baseUrl = `https://${accountName}.blob.core.windows.net/${containerName}/${blobName}`;
