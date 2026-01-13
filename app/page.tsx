@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/components/Toast';
+import { BlockBlobClient } from '@azure/storage-blob';
 
 // --- TIPOS ---
 interface User {
@@ -173,29 +174,15 @@ export default function Home() {
 
             setStatusMsg('Subiendo a la nube...');
 
-            await new Promise((resolve, reject) => {
-                const xhr = new XMLHttpRequest();
-                xhr.open('PUT', uploadUrl, true);
-                xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
-                xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
-
-                xhr.upload.onprogress = (e) => {
-                    if (e.lengthComputable) {
-                        const percentComplete = Math.round((e.loaded / e.total) * 100);
-                        setUploadProgress(percentComplete);
-                    }
-                };
-
-                xhr.onload = () => {
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        resolve(xhr.response);
-                    } else {
-                        reject(new Error('Error en la subida'));
-                    }
-                };
-
-                xhr.onerror = () => reject(new Error('Error de red al subir'));
-                xhr.send(file);
+            // Usar Azure SDK para subida robusta (Chunks + Retries)
+            const blockBlobClient = new BlockBlobClient(uploadUrl);
+            await blockBlobClient.uploadData(file, {
+                blockSize: 4 * 1024 * 1024, // 4MB chunks
+                concurrency: 5, // 5 subidas paralelas para no saturar
+                onProgress: (progress) => {
+                    const percent = Math.round((progress.loadedBytes / file.size) * 100);
+                    setUploadProgress(percent);
+                }
             });
 
             const encodedUrl = encodeURIComponent(publicLink);

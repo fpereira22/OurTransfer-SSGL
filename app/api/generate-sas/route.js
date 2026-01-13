@@ -26,7 +26,7 @@ export async function POST(request) {
             blobName,
             permissions: BlobSASPermissions.parse("cw"), // Create, Write
             startsOn: new Date(new Date().valueOf() - 5 * 60 * 1000), // -5 min para evitar error de reloj
-            expiresOn: new Date(new Date().valueOf() + 10 * 60 * 1000),
+            expiresOn: new Date(new Date().valueOf() + 24 * 60 * 60 * 1000), // 24 horas para subir (archivos grandes)
         }, sharedKeyCredential).toString();
 
         // 2. Permiso para DESCARGAR (Read) - Expira en 24 HORAS EXACTAS
